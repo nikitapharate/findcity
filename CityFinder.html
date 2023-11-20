@@ -1,0 +1,94 @@
+<!-- // i used here html css and js, Levenshtein distance and making it by using ggole reference  -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #result {
+            font-weight: bold;
+        }
+    </style>
+    <title>City Finder</title>
+</head>
+<body>
+    <h1>City Finder</h1>
+
+    <button onclick="findCity()">Find My City</button>
+
+    <p id="result"></p>
+
+    <script>
+        async function findCity() {
+            try {
+                const response = await fetch('https://ipinfo.io/json');
+                const data = await response.json();
+
+                // Check if the response contains the 'city' property
+                const userCity = data.city || 'Unknown';
+
+                // Additional known cities
+                const knownCities = ['New York', 'London', 'Tokyo', 'Paris', 'Sydney', 'Pune'];
+                
+                // Find the closest known city based on the user's city
+                const closestCity = findClosestCity(userCity, knownCities);
+
+                document.getElementById('result').textContent = `Your city is: ${userCity}. Closest known city is: ${closestCity}`;
+            } catch (error) {
+                console.error(`Error fetching location: ${error.message}`);
+                alert('Error fetching location. Please try again.');
+            }
+        }
+
+        function findClosestCity(userCity, knownCities) {
+            // Find the closest known city based on user's city
+            const distances = knownCities.map(city => ({
+                name: city,
+                distance: levenshteinDistance(userCity.toLowerCase(), city.toLowerCase()),
+            }));
+
+            const closestCity = distances.reduce((min, current) => (min.distance < current.distance ? min : current));
+
+            return closestCity.name;
+        }
+
+        // Function to calculate Levenshtein distance between two strings
+        function levenshteinDistance(str1, str2) {
+            const m = str1.length;
+            const n = str2.length;
+            const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+
+            for (let i = 0; i <= m; i++) {
+                for (let j = 0; j <= n; j++) {
+                    if (i === 0) {
+                        dp[i][j] = j;
+                    } else if (j === 0) {
+                        dp[i][j] = i;
+                    } else {
+                        dp[i][j] = Math.min(
+                            dp[i - 1][j - 1] + (str1[i - 1] !== str2[j - 1] ? 1 : 0),
+                            dp[i - 1][j] + 1,
+                            dp[i][j - 1] + 1
+                        );
+                    }
+                }
+            }
+
+            return dp[m][n];
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
